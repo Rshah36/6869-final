@@ -13,3 +13,6 @@ While the paper uses these key frames to conduct video summarization however, we
 
 ##Evaluation:
 In order to evaluate our project, we will compare both the replicated ResNet16-based model for key frame detection to the baselines in the paper, as well as comparing the modified online key frame detection model to the paper baselines. Specifically, the outcome of each of the clustering methods will be compared to the baselines in the papers cited above. Although we expect the online model to not work as well as the offline model detailed in the paper, it could provide insight into how this method could be used for a different set of applications.
+
+##Dataset:
+Similar to Jadon & Jasim, 2020, we are utilizing the )SumMe dataset)[https://gyglim.github.io/me/vsum/index.html].
