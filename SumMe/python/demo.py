@@ -8,9 +8,9 @@
 % Then, it evaluates the summary and plots the performance compared to the human summaries
 %
 %%%%%%%%
-% publication: Gygli et al. - Creating Summaries from User Videos, ECCV 2014
 % author:      Michael Gygli, PhD student, ETH Zurich,
 % mail:        gygli@vision.ee.ethz.ch
+% publication: Gygli et al. - Creating Summaries from User Videos, ECCV 2014
 % date:        05-16-2014
 '''
 import os 
