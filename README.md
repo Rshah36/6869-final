@@ -8,6 +8,7 @@ The method we intend to focus on is the ResNet16-based model (detailed in § III
 - GMM (Gaussian Misxture Model) as applied in Jadon & Jasim, 2020
 - K-Means clustering as applied in Jadon & Jasim, 2020
 - t-SNE as detailed in [Wattenbery et al., 2016](https://distill.pub/2016/misread-tsne/)
+
 And potentially:
 - Delaunay clustering as detailed in [Mundur et al., 2006](https://link.springer.com/article/10.1007%2Fs00799-005-0129-9)
 - Autonomous Data-Driven Clustering as detailed in [Gu & Angelov, 2014](https://eprints.lancs.ac.uk/id/eprint/79842/1/Autonomous_data_driven_real_time_clustering_v3.pdf)
