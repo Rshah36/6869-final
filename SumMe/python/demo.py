@@ -14,12 +14,12 @@
 % date:        05-16-2014
 '''
 import os 
-from summe import *
+from .summe import *
 import numpy as np
 import random
 ''' PATHS ''' 
-HOMEDATA='GT/';
-HOMEVIDEOS='videos/';
+HOMEDATA='./SumMe/GT/';
+HOMEVIDEOS='./SumMe/videos/';
 
 if __name__ == "__main__":
     # Take a random video and create a random summary for it
