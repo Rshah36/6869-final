@@ -48,7 +48,9 @@ class ResNetFeatureEx:
             cap = cv2.VideoCapture(self.data_path + v)
             nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             n = 0
-            frameActivations = np.empty((512,8,8)) #shape of activations
+            # frameActivations = np.empty((512,8,8)) #shape of activations
+            if not os.path.exists('features/'+vName+'_'+str(nframes)):
+                os.makedirs('features/'+vName+'_'+str(nframes))
             with tqdm(total=nframes) as pbar:
                 while(cap.isOpened()):
                     ret, frame = cap.read()
@@ -59,12 +61,12 @@ class ResNetFeatureEx:
                     pbar.update(1)                    
                     frameTensor = ResNetFeatureEx.center_crop(Image.fromarray(np.uint8(frame)))
                     activations = self.model_cut(frameTensor.unsqueeze(0)).squeeze().numpy()
-                    frameActivations = np.concatenate((frameActivations,activations), axis=0)
+                    # frameActivations = np.concatenate((frameActivations,activations), axis=0)
+                    np.save('features/'+vName+'_'+str(nframes)+'/'+str(n), activations)
                     n += 1
                 cap.release()
                 cv2.destroyAllWindows()
-            np.save('features/'+str(vName)+'_'+str(nframes), frameActivations)
-            print('frameActivations shape:', frameActivations.shape)
+            # print('frameActivations shape:', frameActivations.shape)
 
 
 def main():
