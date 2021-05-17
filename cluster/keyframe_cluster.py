@@ -1,6 +1,8 @@
 from collections import defaultdict
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 import numpy as np
 
 class KeyFrameClusterer:
@@ -11,6 +13,7 @@ class KeyFrameClusterer:
     def cluster(self, frame_ids, frame_vectors):
         '''
             Cluster our video and identify the keyframes.
+            
             Parameters
             ----------
             frame_ids :: ndarray of shape (N_FRAMES,):
@@ -32,6 +35,10 @@ class KeyFrameClusterer:
                 an array of labels for each frame, where frame_labels[i] is the cluster ID for the frame at frame_ids[i]
         '''
         raise NotImplementedError
+
+#######################################################
+###################### KMeans  ########################
+#######################################################
 
 class KMeansClusterer(KeyFrameClusterer):
     def __init__(self, num_clusters):
@@ -59,6 +66,42 @@ class KMeansClusterer(KeyFrameClusterer):
         for i,feature in enumerate(features):
             if feature == target_feature: return i
         return -1
+
+class KMClusterer(KMeansClusterer):
+    def __init__(self, num_clusters):
+        super().__init__(num_clusters)
+
+class PCAKMClusterer(KMeansClusterer):
+    '''
+        PCA then KMeans to cluster
+    '''
+    def __init__(self, num_clusters, num_components):
+        super().__init__(num_clusters)
+        self.num_components = num_components
+        self.pca = PCA(n_components=self.num_components)
+
+    def cluster(self, frame_ids, frame_vectors, verbose=False):
+        pca = self.pca.fit(frame_vectors)
+        lower_dimension_vectors = pca.transform(frame_vectors)
+        return super().cluster(frame_ids, lower_dimension_vectors, verbose=verbose)
+
+class TSNEKMClusterer(KMeansClusterer):
+    '''
+        PCA then KMeans to cluster
+    '''
+    def __init__(self, num_clusters, num_components, perplexity):
+        super().__init__(num_clusters)
+        self.num_components = num_components
+        self.perplexity = perplexity
+        self.tsne = TSNE(n_components=self.num_components, perplexity=self.perplexity)
+
+    def cluster(self, frame_ids, frame_vectors, verbose=False):
+        lower_dimension_vectors = self.tsne.fit_transform(frame_vectors)
+        return super().cluster(frame_ids, lower_dimension_vectors, verbose=verbose)
+        
+#######################################################
+################ Gaussian Mixture Models ##############
+#######################################################
 
 class GaussianMixtureModelClusterer(KeyFrameClusterer):
     def __init__(self, num_clusters):
@@ -94,9 +137,36 @@ class GaussianMixtureModelClusterer(KeyFrameClusterer):
         keyframe_ids = np.array(keyframe_ids)
 
         return keyframe_ids, frame_ids, cluster_ids
-        
 
 class GMMClusterer(GaussianMixtureModelClusterer):
     def __init__(self, num_clusters):
         super().__init__(num_clusters)
+
+class PCAGMMClusterer(GaussianMixtureModelClusterer):
+    '''
+        PCA then GMM to cluster
+    '''
+    def __init__(self, num_clusters, num_components):
+        super().__init__(num_clusters)
+        self.num_components = num_components
+        self.pca = PCA(n_components=self.num_components)
+
+    def cluster(self, frame_ids, frame_vectors, verbose=False):
+        pca = self.pca.fit(frame_vectors)
+        lower_dimension_vectors = pca.transform(frame_vectors)
+        return super().cluster(frame_ids, lower_dimension_vectors, verbose=verbose)
+
+class TSNEGMMClusterer(GaussianMixtureModelClusterer):
+    '''
+        PCA then GMM to cluster
+    '''
+    def __init__(self, num_clusters, num_components, perplexity):
+        super().__init__(num_clusters)
+        self.num_components = num_components
+        self.perplexity = perplexity
+        self.tsne = TSNE(n_components=self.num_components, perplexity=self.perplexity)
+
+    def cluster(self, frame_ids, frame_vectors, verbose=False):
+        lower_dimension_vectors = self.tsne.fit_transform(frame_vectors)
+        return super().cluster(frame_ids, lower_dimension_vectors, verbose=verbose)
 
