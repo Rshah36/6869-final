@@ -12,23 +12,9 @@ class ResNetFeatureEx:
     def __init__(self, data_path):
         self.data_path = data_path
         model = models.resnet18(pretrained=True)
-        self.model_cut = Sequential(*(list(model.children())[:-2])).eval().to(device)
+        self.model_cut = Sequential(*(list(model.children())[:-1])).eval().to(device)
         for param in self.model_cut.parameters():
             param.requires_grad = False
-
-    def generate_featuremap_unit(self,im):
-        # Adapted from 6.869 Miniplaces1 Exercise
-        # Extract activation from model
-        # Mark the model as being used for inference
-        # # Crop the image
-        # im = center_crop(im_input)
-        # Place the image into a batch of size 1, and use the model to get an intermediate representation
-        activations = self.model_cut(im.unsqueeze(0))
-        # Print the shape of our representation
-        print(activations.size())
-        # Extract the only result from this batch, and take just the `unit_id`th channel
-        # Return this channel
-        return activations.squeeze()
 
     def center_crop(imPIL):
         # Adapted from 6.869 Miniplaces1 Exercise
@@ -77,7 +63,8 @@ class ResNetFeatureEx:
             cap = cv2.VideoCapture(self.data_path + v)
             nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             n = 0
-            vidFrames = np.empty((3,227,227)) #shape of frames
+            vidFrames = torch.empty((0,3,227,227)) #shape of frame batch
+            vidFeatures = np.empty((0,512)) #shape of features
             with tqdm(total=nframes) as pbar:
                 while(cap.isOpened()):
                     ret, frame = cap.read()
@@ -86,15 +73,24 @@ class ResNetFeatureEx:
                     pbar.update(1)                    
                     frameTensor = ResNetFeatureEx.center_crop(Image.fromarray(np.uint8(frame)))
                     # print(frameTensor.shape) #(3,227,227)
-                    vidFrames = np.append(vidFrames,frameTensor, axis=0)
+                    vidFrames = torch.cat((vidFrames,frameTensor.unsqueeze(0)), dim=0)
                     n += 1
+                    if n%frameBatch == 0:
+                        # print(vidFrames.shape) #(10,3,227,227)
+                        vidFrames = vidFrames.to(device)
+                        activations = self.model_cut(vidFrames).numpy().squeeze()
+                        vidFeatures = np.append(vidFeatures,activations, axis=0)
+                        # reset frame batch
+                        vidFrames = torch.empty((0,3,227,227)) #shape of frame batch
                 cap.release()
                 cv2.destroyAllWindows()
-            print('Plugging in frames to ResNet...')
+
             vidFrames = vidFrames.to(device)
-            activations = self.model_cut(vidFrames).numpy()
+            activations = self.model_cut(vidFrames).numpy().squeeze()
+            vidFeatures = np.append(vidFeatures,activations, axis=0)
+
             print('Saving off...')
-            np.save('featuresBatched/'+vName+'_'+str(nframes), activations)
+            np.save('featuresBatched/'+vName+'_'+str(nframes), vidFeatures)
             # print('frameActivations shape:', frameActivations.shape)
 
 
@@ -106,4 +102,5 @@ def main():
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    frameBatch = 100
     main()
