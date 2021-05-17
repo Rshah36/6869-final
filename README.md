@@ -4,7 +4,7 @@ Keyframe extraction algorithm implementation for final project, 6.869 Advances i
 ## Approach:
 Our project has three central goals: (1) replicate one of the video summarization methods detailed in [Jadon & Jasim, 2020](https://arxiv.org/pdf/1910.04792.pdf), (2) attempt an implementation of this key-frame extraction technique incorprating other clustering methods, and (3) evaluate the ability of the developed model to cluster footage incorporating multiple scenes, rather than the current dataset.
 
-The method we intend to focus on is the ResNet16-based model (detailed in § III [A][5]) which detects key frames in a video by extracting features from a CNN and clustering those frames. We intend to test this feature extraction method with the following clustering techniques:
+The method we intend to focus on is the ResNet16-based model (detailed in § III [A][5]) which detects key frames in a video by extracting features from a CNN and clustering those frames; here, we implement the same methdology with Resnet. We intend to test this feature extraction method with the following clustering techniques:
 - GMM (Gaussian Misxture Model) as applied in Jadon & Jasim, 2020
 - K-Means clustering as applied in Jadon & Jasim, 2020
 - t-SNE as detailed in [Wattenbery et al., 2016](https://distill.pub/2016/misread-tsne/)
