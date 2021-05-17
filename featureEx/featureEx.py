@@ -1,5 +1,6 @@
 import torchvision.models as models
 from torchvision import transforms
+import torch
 from torch.nn import Sequential as Sequential
 from PIL import Image
 import os
@@ -11,7 +12,7 @@ class ResNetFeatureEx:
     def __init__(self, data_path):
         self.data_path = data_path
         model = models.resnet18(pretrained=True)
-        self.model_cut = Sequential(*(list(model.children())[:-2])).eval()
+        self.model_cut = Sequential(*(list(model.children())[:-2])).eval().to(device)
         for param in self.model_cut.parameters():
             param.requires_grad = False
 
@@ -48,7 +49,6 @@ class ResNetFeatureEx:
             cap = cv2.VideoCapture(self.data_path + v)
             nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             n = 0
-            # frameActivations = np.empty((512,8,8)) #shape of activations
             if not os.path.exists('features/'+vName+'_'+str(nframes)):
                 os.makedirs('features/'+vName+'_'+str(nframes))
             with tqdm(total=nframes) as pbar:
@@ -61,19 +61,49 @@ class ResNetFeatureEx:
                     pbar.update(1)                    
                     frameTensor = ResNetFeatureEx.center_crop(Image.fromarray(np.uint8(frame)))
                     activations = self.model_cut(frameTensor.unsqueeze(0)).squeeze().numpy()
-                    # frameActivations = np.concatenate((frameActivations,activations), axis=0)
                     np.save('features/'+vName+'_'+str(nframes)+'/'+str(n), activations)
                     n += 1
                 cap.release()
                 cv2.destroyAllWindows()
+
+    def get_features_batched(self):
+        included_extenstions=['webm']
+        videoList=[fn for fn in os.listdir(self.data_path) if any([fn.endswith(ext) for ext in included_extenstions])]
+        print(videoList)
+        
+        for v in videoList:
+            print('Processing Video: ' + v)
+            vName = v.split('.')[0]
+            cap = cv2.VideoCapture(self.data_path + v)
+            nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            n = 0
+            vidFrames = np.empty((3,227,227)) #shape of frames
+            with tqdm(total=nframes) as pbar:
+                while(cap.isOpened()):
+                    ret, frame = cap.read()
+                    if ret == False:
+                        break
+                    pbar.update(1)                    
+                    frameTensor = ResNetFeatureEx.center_crop(Image.fromarray(np.uint8(frame)))
+                    # print(frameTensor.shape) #(3,227,227)
+                    vidFrames = np.append(vidFrames,frameTensor, axis=0)
+                    n += 1
+                cap.release()
+                cv2.destroyAllWindows()
+            print('Plugging in frames to ResNet...')
+            vidFrames = vidFrames.to(device)
+            activations = self.model_cut(vidFrames).numpy()
+            print('Saving off...')
+            np.save('featuresBatched/'+vName+'_'+str(nframes), activations)
             # print('frameActivations shape:', frameActivations.shape)
 
 
 def main():
     videoPath = './SumMe/videos/'
     extraction = ResNetFeatureEx(data_path=videoPath)
-    extraction.get_features()
+    extraction.get_features_batched()
 
 
 if __name__ == '__main__':
-	main()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    main()
